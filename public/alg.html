@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Keyi Search</title>
+
+    <!--jQuery-->
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+
+    <link href='https://fonts.googleapis.com/css?family=Josefin+Sans' rel='stylesheet' type='text/css'>
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">-->
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    <link href="./src/css/style.css" type="text/css" rel="stylesheet"/>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>科亿搜索算法</h2>
+
+    <div>
+        <h4>输入：</h4>
+        <ul>
+            <li>
+                科亿的专利申请数据，每条数据拥有多个属性（例如：名称，申请人，状态）
+            </li>
+            <li>
+                搜索关键词
+            </li>
+        </ul>
+    </div>
+
+    <div>
+        <h4>输出：</h4>
+        <ul>
+            <li>
+                搜索结果，按照算法打分排序
+            </li>
+        </ul>
+    </div>
+
+    <div>
+        <h4>算法过程(v1)：</h4>
+        <pre>
+            result = []
+            split searchText into keywords by commas
+            for patent in allPatents
+                for key in patent.keys
+                    val = patent[key]
+                    for keyword in keywords
+                        if val contains keyword
+                            result.add(patent)
+                            goto loopEnd;
+                loopEnd:
+                    break
+            return result
+        </pre>
+    </div>
+
+    <div>
+        <h4>优化：</h4>
+        <pre>
+            关键词 -> 近义词/替换词
+            直接match、近义词match分数不同
+            不同词语match的得分不同，比如:
+                根据在数据中出现的次数打分
+                记录被搜索的关键词。被搜索次数越多得分越高
+            match多个词语加成
+            match多个词语距离越近分数越高，最后按分数排序
+            将match的部分高亮显示
+        </pre>
+    </div>
+
+    <div>
+        <h4>算法过程(v2)：</h4>
+        <pre>
+            search():
+                result = []
+                split searchText into keywords by commas
+                for patent in allPatents
+                    patent.score = calcScore(patent, keywords)
+                allPatents.sort("score")
+                return allPatents.top(100)
+
+            calcScore(patent, keywords):
+                occurrence = {}
+                keywordScore = 10
+                relatedWordScore = 5
+
+                for keyword in keywords
+                    for key in patent.keys
+                        val = patent[key]
+                        if val contains keyword
+                            result += keywordScore
+                            occurrence[key] ++
+
+                relatedKeywords = getRelatedWords(keywords)
+                for keyword in relatedKeywords
+                    for key in patent.keys
+                        val = patent[key]
+                        if val contains keyword
+                            result += relatedWordScore
+                            occurrence[key] ++
+
+            getRelatedWords(keywords):
+                result = []
+                for keyword in keywords
+                    result.append(all entries in relatedWords[keyword])
+                return result
+
+
+        </pre>
+    </div>
+</div>
+
+<script src="./src/client.min.js"></script>
+
+</body>
+</html>

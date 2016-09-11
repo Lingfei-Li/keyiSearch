@@ -17,7 +17,7 @@ export default class Layout extends React.Component {
         };
         
         //Load patent application data from db
-        axios.get("api/db/patentApplication?limit=10").then((res)=>{
+        axios.get("api/db/patentApplication?limit=1000").then((res)=>{
             this.setState({
                 "data":res.data,
                 "dbLoadCompleted":true

@@ -16,7 +16,7 @@ router.get('/patentApplication', function(req, res, next) {
     const DB_ADDR = config.get('db.addr');
     const DB_USER= config.get('db.user');
     const DB_PWD = config.get('db.pwd');
-    
+
     const limit = (req.query.limit===undefined) ? "" : `top ${Math.max(0, parseInt(req.query.limit))}`;
     const columns = `*`;
     const conn_str = `mssql://${DB_USER}:${DB_PWD}@${DB_ADDR}/${DB_NAME}`;

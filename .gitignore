@@ -4,3 +4,4 @@ config/debug.json
 config/production.json
 bin/
 node_modules/
+client.min.js
