@@ -1,0 +1,8 @@
+{
+  "db":{
+    "addr":"localhost",
+    "dbname":"DMCH",
+    "user":"amsuser",
+    "pwd":"password"
+  }
+}

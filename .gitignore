@@ -1,5 +1,6 @@
 .git/
 .idea/
-config/
+config/debug.json
+config/production.json
 bin/
 node_modules/
