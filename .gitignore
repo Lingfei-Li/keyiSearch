@@ -1,0 +1,5 @@
+.git/
+.idea/
+config/
+bin/
+node_modules/
