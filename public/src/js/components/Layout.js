@@ -8,7 +8,7 @@ export default class Layout extends React.Component {
     
     constructor(){
         super();
-        
+
 
         this.state = {
             "searchText":"移动终端互动电视同步控制装置",
