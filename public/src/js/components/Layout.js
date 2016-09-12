@@ -36,6 +36,9 @@ export default class Layout extends React.Component {
         }) .map((item)=>{return item.trim()});
     }
     
+    toSegmentSet(arr) {
+    }
+    
     wrapKeywords(keywords) {
         return keywords.map((item)=>{
             return (
@@ -45,6 +48,7 @@ export default class Layout extends React.Component {
             );
         });
     }
+
     
     addToSearchText(e) {
         if(this.state.searchComplete == true) {
@@ -61,34 +65,45 @@ export default class Layout extends React.Component {
     }
     
     doSearch() {
-        const searchKeywords = this.splitByCommas(this.state.searchText);
-        const searchKeywordsComponents = this.wrapKeywords(searchKeywords);
         
-        var result = [];
-        if(searchKeywords.length == 0) {
-            result = this.state.data;
-        }
-        else {
-            //returns the patent application that includes any of the keywords in any of its fields
-            result = this.state.data.filter((item)=>{
-                var flag = false;
-                Object.keys(item).forEach((key)=>{
-                    const val = item[key];
-                    searchKeywords.forEach((keyword)=>{
-                        if(typeof val == "string" && val.indexOf(keyword) != -1) {
-                            flag = true;
-                        }
+        var rawKeywords = this.splitByCommas(this.state.searchText);
+        
+        axios.post("api/segment/", {"data":rawKeywords}).then((res)=>{
+            console.log(res.data);
+            const searchKeywordsComponents = this.wrapKeywords(rawKeywords);
+            const segmentedKeywords = [...(new Set([...rawKeywords, ...res.data]))];
+            var result = [];
+            if(segmentedKeywords.length == 0) {
+                result = this.state.data;
+            }
+            else {
+                //returns the patent application that includes any of the keywords in any of its fields
+                result = this.state.data.filter((item)=>{
+                    var flag = false;
+                    Object.keys(item).forEach((key)=>{
+                        const val = item[key];
+                        segmentedKeywords.forEach((keyword)=>{
+                            if(typeof val == "string" && val.indexOf(keyword) != -1) {
+                                flag = true;
+                            }
+                        });
                     });
+                    return flag;
                 });
-                return flag;
+            }
+
+            this.setState({
+                "searchKeywords":searchKeywordsComponents,
+                "searchResult":JSON.stringify(result, null, 2),
+                "searchComplete":true
             });
-        }
-        
-        this.setState({
-            "searchKeywords":searchKeywordsComponents,
-            "searchResult":JSON.stringify(result, null, 2),
-            "searchComplete":true
+           
+            
+            
+        }).catch((res)=>{   //keyword segmenting fails
+            console.log(res);
         });
+        
     }
     
     render(){
@@ -105,7 +120,7 @@ export default class Layout extends React.Component {
             <div className="container">
                 <h2>搜索科亿专利数据库</h2>
                 <div className="form-group">
-                    <form onSubmit={this.doSearch.bind(this)}>
+                    <form onSubmit={this.doSearch.bind(this)} action="#">
                         <input className="form-control" type="text" value={this.state.searchText} onChange={this.updateSearchText.bind(this)} placeholder="用逗号分隔"/>
                         {this.state.dbLoadCompleted==true?searchButton:searchButtonLoading}
                     </form>

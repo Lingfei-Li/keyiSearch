@@ -7,5 +7,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.use("/db", require("./db/index"));
+router.use("/segment", require("./segment/index"));
 
 module.exports = router;
