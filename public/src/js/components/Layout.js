@@ -67,11 +67,13 @@ export default class Layout extends React.Component {
     doSearch() {
         
         var rawKeywords = this.splitByCommas(this.state.searchText);
-        
+
+        //segments search keywords
         axios.post("api/segment/", {"data":rawKeywords}).then((res)=>{
             console.log(res.data);
             const searchKeywordsComponents = this.wrapKeywords(rawKeywords);
             const segmentedKeywords = [...(new Set([...rawKeywords, ...res.data]))];
+            // const segmentedKeywords = rawKeywords;
             var result = [];
             if(segmentedKeywords.length == 0) {
                 result = this.state.data;
@@ -92,9 +94,25 @@ export default class Layout extends React.Component {
                 });
             }
 
+            var searchResult = result.map((item)=>{
+                return (
+                    <div key={uuid.v1()} class="well">
+                        <div>
+                            {item.PatentName}
+                        </div>
+                        <div>
+                            {item.ApplicantName}
+                        </div>
+                        <div>
+                            {item.State}
+                        </div>
+                    </div>
+                );
+            });
+
             this.setState({
                 "searchKeywords":searchKeywordsComponents,
-                "searchResult":JSON.stringify(result, null, 2),
+                searchResult,
                 "searchComplete":true
             });
            
