@@ -23,3 +23,7 @@ pre {
     cursor: pointer;
     display: inline-block;
 }
+
+.searchResultKeyword {
+    color: rgb(180, 0, 0);
+}

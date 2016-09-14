@@ -11,7 +11,7 @@ export default class Layout extends React.Component {
 
 
         this.state = {
-            "searchText":"移动终端互动电视同步控制装置",
+            "searchText":"移动终端",
             "dbLoadCompleted":false,
             "searchComplete":false
         };
@@ -65,47 +65,98 @@ export default class Layout extends React.Component {
     }
     
     doSearch() {
-        
         var rawKeywords = this.splitByCommas(this.state.searchText);
-
         //segments search keywords
         axios.post("api/segment/", {"data":rawKeywords}).then((res)=>{
             console.log(res.data);
             const searchKeywordsComponents = this.wrapKeywords(rawKeywords);
-            const segmentedKeywords = [...(new Set([...rawKeywords, ...res.data]))];
-            // const segmentedKeywords = rawKeywords;
+            const segmentedKeywords = [...(new Set([...res.data]))];
             var result = [];
-            if(segmentedKeywords.length == 0) {
+            if(segmentedKeywords.length == 0) {     //no keyword is provided. show all records
                 result = this.state.data;
             }
-            else {
-                //returns the patent application that includes any of the keywords in any of its fields
-                result = this.state.data.filter((item)=>{
-                    var flag = false;
+            else {      //searching. please see alg.html for algorithm description
+                result = this.state.data.map((item)=>{
+                    var itemSearchResult = {    //similar to 'item', but added searching data
+                        "keep": false,
+                        "searchResultKeywordRanges":{},
+                        ...item
+                    };
                     Object.keys(item).forEach((key)=>{
-                        const val = item[key];
+                        var val = itemSearchResult[key];
                         segmentedKeywords.forEach((keyword)=>{
-                            if(typeof val == "string" && val.indexOf(keyword) != -1) {
-                                flag = true;
+                            if(typeof val == "string" && val.indexOf(keyword) != -1) {  //Match found. Record the matching range
+                                itemSearchResult.keep = true;
+                                if(itemSearchResult.searchResultKeywordRanges[key] === undefined) {
+                                    itemSearchResult.searchResultKeywordRanges[key] = [];
+                                }
+                                itemSearchResult.searchResultKeywordRanges[key].push({
+                                    "left":val.indexOf(keyword), 
+                                    "right":val.indexOf(keyword)+keyword.length
+                                });
                             }
                         });
                     });
-                    return flag;
+                    return itemSearchResult;
+                }).filter((item)=>{
+                    return item.keep == true;
                 });
+
+                //Process overlapped matching ranges, e.g. 2-4 3-5
+                //and add html tags to highlight the keywords
+                result.forEach((item)=>{        //process for each database record 
+                    Object.keys(item.searchResultKeywordRanges).forEach((key)=>{    //process overlaps for each field, e.g. PatentName, State
+                        item.searchResultKeywordRanges[key].sort((a, b)=>{          //sort the ranges by left then right, ascending order
+                            if(a.left == b.left)
+                                return a.right - b.right;
+                            return a.right - b.right;
+                        });
+                        var l = -1;     //the maximum range processed
+                        var r = -1;
+                        var rangesClean = [];
+                        item.searchResultKeywordRanges[key].forEach(({left, right})=>{    //confusing naming here. might improve in the future
+                            if(l == -1 && r == -1) {        //warm up
+                                l = left;
+                                r = right;
+                            }
+                            else if(left > r) {             //current range is entirely to the right of the maximum range
+                                rangesClean.push({"left":l, "right":r});
+                                l = left;
+                                r = right;
+                            }
+                            else if(right <= l) {  //interval is contained by maximum range (because 'left' is mono-increasing)
+                                //nothing
+                            }
+                            else {                      //interval is crossing the boundary
+                                r = right;              //no need to update l, because 'left' is incr
+                            }
+                        });
+                        rangesClean.push({"left":l, "right":r});    //wrap up the remaining range
+                        
+                        //Add html tags according to the processed ranges
+                        var last = 0;                   //last pos being processed
+                        var str = "";                   //final string with html tags
+                        rangesClean.forEach(({left, right})=>{
+                            if(left > last) 
+                                str += item[key].substring(last, left);
+                            str += "<span class='searchResultKeyword'>" + item[key].substring(left, right) + "</span>";
+                            last = right;
+                        });
+                        str += item[key].substring(last);   //handle the remainings
+                        item[key] = str;
+                    });
+                });
+                
+                
+                //sort the result by relevance
             }
 
             var searchResult = result.map((item)=>{
                 return (
-                    <div key={uuid.v1()} class="well">
-                        <div>
-                            {item.PatentName}
-                        </div>
-                        <div>
-                            {item.ApplicantName}
-                        </div>
-                        <div>
-                            {item.State}
-                        </div>
+                    <div key={uuid.v1()} className="well">
+                        <div dangerouslySetInnerHTML={{__html: item.PatentName}}></div>
+                        <div dangerouslySetInnerHTML={{__html: item.ApplicantName}}></div>
+                        <div dangerouslySetInnerHTML={{__html: item.State}}></div>
                     </div>
                 );
             });
