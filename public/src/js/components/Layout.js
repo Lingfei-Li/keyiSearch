@@ -104,6 +104,7 @@ export default class Layout extends React.Component {
             console.log(res);
         });
         
+        return false;
     }
     
     render(){
